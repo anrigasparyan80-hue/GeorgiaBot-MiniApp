@@ -1,0 +1,194 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeorgiaBot</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f6fc;color:#17243b;font-family:Arial,sans-serif}
+header{background:#174a8b;color:white;padding:25px 20px 30px;border-radius:0 0 25px 25px}
+header h1{margin:0;font-size:27px}
+header p{margin:7px 0 0;color:#dceaff}
+main{padding:18px}
+.card{background:white;border-radius:17px;padding:18px;margin-bottom:14px;box-shadow:0 3px 12px #173d7010}
+h2{font-size:19px;margin:0 0 12px}
+button{border:0;border-radius:12px;padding:13px;background:#174a8b;color:white;font-size:15px;font-weight:bold;width:100%;margin-top:9px}
+button.secondary{background:#e8f0fc;color:#174a8b}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.letter{background:#edf3fc;border-radius:12px;text-align:center;padding:12px;font-size:25px;color:#174a8b}
+.letter small{display:block;font-size:12px;color:#586b86}
+nav{position:sticky;bottom:0;background:white;display:flex;justify-content:space-around;padding:12px 3px;border-top:1px solid #e2e8f0}
+nav button{background:transparent;color:#174a8b;width:auto;margin:0;padding:8px;font-size:12px}
+.page{display:none}
+.page.active{display:block}
+.progress{height:9px;background:#e8edf5;border-radius:10px;overflow:hidden}
+.progress div{height:100%;width:0;background:#174a8b}
+</style>
+</head>
+<body>
+<header>
+<h1>🇬🇪 GeorgiaBot</h1>
+<p>Изучай грузинский язык легко!</p>
+</header>
+
+<main>
+<section id="home" class="page active">
+<div class="card">
+<h2>გამარჯობა! Привет!</h2>
+<p>Добро пожаловать в GeorgiaBot.</p>
+<p>Твой прогресс: <b id="xp">0 XP</b></p>
+<div class="progress"><div id="bar"></div></div>
+<p id="level">Уровень: Новичок</p>
+</div>
+<div class="card">
+<h2>📚 Продолжить обучение</h2>
+<p>Начни изучать грузинский прямо сейчас.</p>
+<button onclick="show('lessons')">Открыть уроки</button>
+</div>
+<div class="card">
+<h2>🎯 Быстрый тест</h2>
+<p>Проверим твои знания?</p>
+<button onclick="show('quiz')">Начать тест</button>
+</div>
+</section>
+
+<section id="alphabet" class="page">
+<div class="card">
+<h2>🔤 Грузинский алфавит</h2>
+<p>В грузинском алфавите 33 буквы.</p>
+<div class="grid" id="letters"></div>
+</div>
+</section>
+
+<section id="lessons" class="page">
+<div class="card">
+<h2>📚 Уроки</h2>
+<p>Урок 1 — Приветствия</p>
+<button onclick="lesson(0)">Открыть урок</button>
+<p>Урок 2 — Знакомство</p>
+<button onclick="lesson(1)">Открыть урок</button>
+<p>Урок 3 — Полезные слова</p>
+<button onclick="lesson(2)">Открыть урок</button>
+<div id="lessonContent"></div>
+</div>
+</section>
+
+<section id="quiz" class="page">
+<div class="card">
+<h2>📝 Тест</h2>
+<p id="question">Как переводится გამარჯობა?</p>
+<div id="answers"></div>
+<p id="result"></p>
+</div>
+</section>
+
+<section id="profile" class="page">
+<div class="card">
+<h2>👤 Мой профиль</h2>
+<p>Уровень: <b id="profileLevel">Новичок</b></p>
+<p>Опыт: <b id="profileXP">0 XP</b></p>
+<p>Приложение GeorgiaBot</p>
+</div>
+</section>
+</main>
+
+<nav>
+<button onclick="show('home')">🏠 Главная</button>
+<button onclick="show('alphabet')">🔤 Буквы</button>
+<button onclick="show('lessons')">📚 Уроки</button>
+<button onclick="show('profile')">👤 Профиль</button>
+</nav>
+
+<script>
+const tg=window.Telegram?.WebApp;
+tg?.ready();
+tg?.expand();
+
+const alphabet=[
+["ა","а"],["ბ","б"],["გ","г"],["დ","д"],["ე","э"],
+["ვ","в"],["ზ","з"],["თ","т"],["ი","и"],["კ","к"],
+["ლ","л"],["მ","м"],["ნ","н"],["ო","о"],["პ","п"],
+["ჟ","ж"],["რ","р"],["ს","с"],["ტ","т"],["უ","у"],
+["ფ","п"],["ქ","к"],["ღ","гх"],["ყ","к"],["შ","ш"],
+["ჩ","ч"],["ც","ц"],["ძ","дз"],["წ","ц"],["ჭ","ч"],
+["ხ","х"],["ჯ","дж"],["ჰ","х"]
+];
+
+document.getElementById("letters").innerHTML=alphabet.map(x=>
+`<div class="letter">${x[0]}<small>${x[1]}</small></div>`
+).join("");
+
+function show(id){
+document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+const lessons=[
+["Приветствия",["გამარჯობა — Привет","ნახვამდის — До свидания","მადლობა — Спасибо"]],
+["Знакомство",["მე — Я","შენ — Ты","მე მქვია — Меня зовут"]],
+["Полезные слова",["კი — Да","არა — Нет","კარგი — Хорошо"]]
+];
+
+function lesson(i){
+document.getElementById("lessonContent").innerHTML=
+"<h2>"+lessons[i][0]+"</h2>"+
+lessons[i][1].map(x=>"<p>"+x+"</p>").join("")+
+"<button onclick='completeLesson()'>Урок пройден ✓</button>";
+}
+
+let xp=Number(localStorage.getItem("gbxp")||0);
+function update(){
+let level=xp>=350?"Мастер грузинского":xp>=220?"Эксперт":xp>=120?"Знаток":xp>=50?"Ученик":"Новичок";
+document.getElementById("xp").textContent=xp+" XP";
+document.getElementById("profileXP").textContent=xp+" XP";
+document.getElementById("level").textContent="Уровень: "+level;
+document.getElementById("profileLevel").textContent=level;
+document.getElementById("bar").style.width=Math.min(xp/350*100,100)+"%";
+}
+function completeLesson(){
+xp+=10;
+localStorage.setItem("gbxp",xp);
+update();
+alert("Урок завершён! +10 XP");
+}
+update();
+
+const questions=[
+["Как переводится გამარჯობა?",["Привет","Спасибо","До свидания"],0],
+["Как переводится მადლობა?",["Нет","Спасибо","Да"],1],
+["Как переводится კი?",["Нет","Привет","Да"],2],
+["Как переводится არა?",["Спасибо","Нет","Хорошо"],1],
+["Сколько букв в грузинском алфавите?",["31","33","35"],1]
+];
+let q=0,score=0,locked=false;
+function renderQuiz(){
+locked=false;
+document.getElementById("result").textContent="";
+if(q>=questions.length){
+document.getElementById("question").textContent="Тест завершён! Результат: "+score+"/5";
+document.getElementById("answers").innerHTML="<button onclick='restartQuiz()'>Пройти снова</button>";
+if(score>=3){xp+=score*5;localStorage.setItem("gbxp",xp);update();}
+return;
+}
+let item=questions[q];
+document.getElementById("question").textContent=(q+1)+". "+item[0];
+document.getElementById("answers").innerHTML=item[1].map((a,i)=>
+`<button class="secondary" onclick="answer(${i})">${a}</button>`
+).join("");
+}
+function answer(i){
+if(locked)return;
+locked=true;
+if(i===questions[q][2]){score++;document.getElementById("result").textContent="Верно!";}
+else{document.getElementById("result").textContent="Неверно. Попробуй запомнить правильный ответ.";}
+q++;
+setTimeout(renderQuiz,900);
+}
+function restartQuiz(){q=0;score=0;renderQuiz();}
+renderQuiz();
+</script>
+</body>
+</html>
